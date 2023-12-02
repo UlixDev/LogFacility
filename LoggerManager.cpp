@@ -4,6 +4,7 @@ LoggerManager *LoggerManager::_logger_manager = nullptr;
 
 
 LoggerManager::LoggerManager(QObject *parent):
+    _device_name("stdout"),
     QObject{parent}
 {
     _loggers = QMap<QString, Logger>();
@@ -17,12 +18,13 @@ LoggerManager* LoggerManager::instance()
     return _logger_manager;
 }
 
-Logger& LoggerManager::logger(QString loggerName)
+Logger LoggerManager::logger(QString loggerName)
 {
     if(!_loggers.contains(loggerName)) {
-        Logger& l = Logger();
-        l.setModule(loggerName);
+        Logger l = Logger(loggerName);
+        l.setDevice(_device_name);
         _loggers.insert(loggerName, l);
+
     }
 
     return _loggers.value(loggerName);

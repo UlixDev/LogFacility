@@ -16,6 +16,8 @@ add_executable(logger
   main.cpp
   logger.cpp
   logger.h
+  LoggerManager.cpp
+  LoggerManager.h
 )
 
 target_link_libraries(logger Qt${QT_VERSION_MAJOR}::Core)

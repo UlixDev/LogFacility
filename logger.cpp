@@ -2,8 +2,11 @@
 
 #include <QByteArray>
 
-#include <QTime>
 #include <QDateTime>
+#include <QDateTime>
+
+#include <QFile>
+#include <QIODevice>
 
 #include "logger.h"
 
@@ -14,7 +17,9 @@ const QHash<QString, enum Logger::LogLevel> Logger::_levels = {
     {"WARNING", Logger::LogLevel::WARNING},
     {"INFO", Logger::LogLevel::INFO},
     {"DETAIL", Logger::LogLevel::DETAIL},
-    {"DEBUG", Logger::LogLevel::DEBUG}};
+    {"DEBUG", Logger::LogLevel::DEBUG},
+    {"STACK", Logger::LogLevel::STACK}
+    };
 
 const QHash<enum Logger::LogLevel, QString> Logger::_string_levels = {
     {Logger::LogLevel::CRITICAL, "CRITICAL"},
@@ -22,25 +27,63 @@ const QHash<enum Logger::LogLevel, QString> Logger::_string_levels = {
     {Logger::LogLevel::WARNING, "WARNING"},
     {Logger::LogLevel::INFO, "INFO"},
     {Logger::LogLevel::DETAIL, "DETAIL"},
-    {Logger::LogLevel::DEBUG, "DEBUG"}};
+    {Logger::LogLevel::DEBUG, "DEBUG"},
+    {Logger::LogLevel::STACK, "STACK"}
+};
+
 
 Logger::Logger(QString loggerName, QObject *parent):
-    _level(LogLevel::INFO), _module(loggerName), _out(QTextStream(stdout)),
+    _handler(_message_handler),
+    _level(LogLevel::INFO), _module(loggerName),
+    _stack(),
     QObject(parent)
 {
-    qInstallMessageHandler(Logger::_message_handler);
+
+    qInstallMessageHandler(_handler);
 }
 
-Logger::Logger(Logger &X):
-    _level(X._level), _module(X._module), _out(QTextStream(stdout))
+Logger::Logger(const Logger &X):
+    _handler(X._handler),
+    _level(X._level), _module(X._module), _device_name(X._device_name),
+    _stack(X._stack)
 {
-    qInstallMessageHandler(Logger::_message_handler);
+    qInstallMessageHandler(_handler);
+}
+
+Logger& Logger::operator=(const Logger r)
+{
+    _handler = r._handler;
+
+    _level = r._level;
+    _module = r._module;
+    _device_name = r._device_name;
+
+    _stack = r._stack;
+
+    qInstallMessageHandler(_handler);
+    return *this;
 }
 
 void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context, const QString &message)
 {
 
-    static QTextStream out = QTextStream(stdout);
+    QStringList items = message.split(" ");
+    QString outputFilename = items.at(0);
+    items.pop_front();
+
+    bool close = true;
+    QFile of;
+    if (outputFilename == "stdout") {
+        close = false;
+        of.open(1, QIODevice::WriteOnly);
+    } else if(outputFilename == "stderr") {
+        close = false;
+        of.open(2, QIODevice::WriteOnly);
+    } else {
+        of.setFileName(outputFilename);
+        of.open(QIODevice::Append);
+    }
+    QTextStream out(&of);
 
     enum LogLevel level = LogLevel::DEBUG;
     enum LogLevel referencelevel = LogLevel::INFO;
@@ -63,7 +106,6 @@ void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context,
     }
 
 
-    QStringList items = message.split(" ");
     QString levels = items.at(0);
 
     QString strLevel = levels.split("%")[0];
@@ -82,6 +124,8 @@ void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context,
 
     const QString module = items.at(0);
     items.pop_front();
+    const QString file = items.at(0);
+    items.pop_front();
     const QString function = items.at(0);
     items.pop_front();
     const QString line = items.at(0);
@@ -94,54 +138,63 @@ void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context,
     }
     data.removeLast();
 
-    QString now = QTime::currentTime().toString();
-    const QString customMessage = "[" + now + "]" + " - " +
+    QString today = QDateTime::currentDateTime().toString();
+    const QString customMessage = "[" + today + "]" + " - " +
                                   "[" + strLevel + "]" + " - " +
                                   "[" + module + "]" + " - " +
-                                  "[" + "function " + function + "]" + " - " +
-                                  "[" + "line " + line + "]" + " - " +
+                                  "[" + "file" + " " + file + "]" + " - " +
+                                  "[" + "function" + " " + function + "]" + " - " +
+                                  "[" + "line" + " " + line + "]" + " - " +
                                   "[" + data + "]";
     out << customMessage << Qt::endl;
+    out.flush();
+    if(close)
+        of.close();
 }
 
-void Logger::debug(const QString &message, QString module, const char * const function, const int line)
+void Logger::stack(const QString &message)
+{
+    QString level = QString("STACK") + QString("%") + QString("STACK");
+    _print(message, level, "", "", "", 0);
+}
+void Logger::debug(const QString &message, QString module, const char * const file, const char * const function, const int line)
 {
     QString level = QString("DEBUG") + QString("%") + Logger::_string_levels[_level];
-    _print(message, level, module, function, line);
+    _print(message, level, module, file, function, line);
 }
 
-void Logger::detail(const QString &message, QString module, const char * const function, const int line)
+void Logger::detail(const QString &message, QString module, const char * const file, const char * const function, const int line)
 {
     QString level = QString("DETAIL") + QString("%") + Logger::_string_levels[_level];
-    _print(message, level, module, function, line);
+    _print(message, level, module, file, function, line);
 }
 
-void Logger::info(const QString &message, QString module, const char * const function, const int line)
+void Logger::info(const QString &message, QString module, const char * const file, const char * const function, const int line)
 {
     QString level = QString("INFO") + QString("%") + Logger::_string_levels[_level];
-    _print(message, level, module, function, line);
+    _print(message, level, module, file, function, line);
 }
 
-void Logger::warning(const QString &message, QString module, const char * const function, const int line)
+void Logger::warning(const QString &message, QString module, const char * const file, const char * const function, const int line)
 {
     QString level = QString("WARNING") + QString("%") + Logger::_string_levels[_level];
-    _print(message, level, module, function, line);
+    _print(message, level, module, file, function, line);
 }
 
-void Logger::error(const QString &message, QString module, const char * const function, const int line)
+void Logger::error(const QString &message, QString module, const char * const file, const char * const function, const int line)
 {
     QString level = QString("ERROR") + QString("%") + Logger::_string_levels[_level];
-    _print(message, level, module, function, line);
+    _print(message, level, module, file, function, line);
 }
 
-void Logger::critical(const QString &message, QString module, const char * const function, const int line)
+void Logger::critical(const QString &message, QString module, const char * const file, const char * const function, const int line)
 {
     QString level = QString("CRITICAL") + QString(QString("%")) + Logger::_string_levels[_level];
-    _print(message, level, module, function, line);
+    _print(message, level, module, file, function, line);
 }
 
-void Logger::_print(const QString &message, const QString& level, QString& module, const char * const function, const int line)
+void Logger::_print(const QString message, const QString level, QString module, const char * const file, const char * const function, const int line)
 {
     module = module.isEmpty() ? _module : module;
-    qDebug().noquote() << level << module << function << QString::number(line) << message;
+    qDebug().noquote() << _device_name << level << module << file << function << QString::number(line) << message;
 }
