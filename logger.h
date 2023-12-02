@@ -1,12 +1,16 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <QObject>
+
 #include <QString>
 #include <QHash>
 #include <QTextStream>
 
-class Logger
+class Logger: public QObject
 {
+    Q_OBJECT
+
 public:
     enum class LogLevel: char {
         CRITICAL = 1,
@@ -17,11 +21,10 @@ public:
         DEBUG
     };
 
-    // To avoid pointer reassignment;
-    Logger * operator=(Logger *) = delete;
+    Logger(QString loggerName, QObject *parent=nullptr);
+    Logger(Logger& X);
 
-    static Logger * instance();
-    inline void setLevel(const LogLevel level) {Logger::_level = level;}
+    inline void setLevel(const LogLevel level) {_level = level;}
     inline void setModule(const QString module) {_module = module;}
 
     void debug(const QString &message, QString module="", const char * const function=__builtin_FUNCTION(), const int line=__builtin_LINE());
@@ -32,16 +35,16 @@ public:
     void critical(const QString &message, QString module="", const char * const function=__builtin_FUNCTION(), const int line=__builtin_LINE());
 
 private:
-    static Logger *_logger;
-    static QTextStream _out;
-
     static const QHash<QString, enum LogLevel> _levels;
-    static LogLevel _level;
+    static const QHash<enum LogLevel, QString> _string_levels;
+
+    LogLevel _level;
+    QString _module;
+    QTextStream _out;
 
     static void _message_handler(QtMsgType type, const QMessageLogContext &context, const QString &message);
 
-    QString _module;
-    Logger();
+    void _print(const QString &message, const QString& level, QString& module, const char * const function, const int line);
 };
 
 #endif // LOGGER_H

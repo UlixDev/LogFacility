@@ -2,12 +2,11 @@
 
 LoggerManager *LoggerManager::_logger_manager = nullptr;
 
-QMap<QString, *Logger> LoggerManager::_loggers = QMap<QString, *Logger>();
 
-LoggerManager::LoggerManager(QObject *parent)
-    : QObject{parent}
+LoggerManager::LoggerManager(QObject *parent):
+    QObject{parent}
 {
-
+    _loggers = QMap<QString, Logger>();
 }
 
 LoggerManager* LoggerManager::instance()
@@ -18,8 +17,13 @@ LoggerManager* LoggerManager::instance()
     return _logger_manager;
 }
 
-Logger * LoggerManager::logger(QString loggerName)
+Logger& LoggerManager::logger(QString loggerName)
 {
-    if(_loggers.contains(loggerName)
-        return _loggers.value(loggerName))
+    if(!_loggers.contains(loggerName)) {
+        Logger& l = Logger();
+        l.setModule(loggerName);
+        _loggers.insert(loggerName, l);
+    }
+
+    return _loggers.value(loggerName);
 }

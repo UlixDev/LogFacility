@@ -15,14 +15,14 @@ class LoggerManager : public QObject
 public:
 
     static LoggerManager * instance();
-    Logger* logger(QString loggerName);
+    Logger& logger(QString loggerName);
 
 signals:
 
 private:
     static LoggerManager *_logger_manager;
 
-    static QMap<QString, *Logger> _loggers;
+    QMap<QString, Logger> _loggers;
 
     explicit LoggerManager(QObject *parent = nullptr);
 

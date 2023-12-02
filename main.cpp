@@ -9,9 +9,9 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    Logger *logger = Logger::instance();
-    logger->setLevel(Logger::LogLevel::DEBUG);
-    logger->debug("Program starts", "MAIN");
+    Logger logger = Logger("main");
+    logger.setLevel(Logger::LogLevel::DEBUG);
+    logger.debug("Program starts", "MAIN");
 
     fn();
     return a.exec();
@@ -19,22 +19,21 @@ int main(int argc, char *argv[])
 
 void fn()
 {
-    Logger *logger = Logger::instance();
-    logger->setModule("ALGORITHM");
+    // By default the level is INFO
+    Logger logger = Logger("ALGORITHM");
 
-    logger->debug("fn is working");
+    logger.debug("fn is working");
     int a = 1;
-    logger->debug("Value of a is " + QString::number(a));
+    logger.debug("Value of a is " + QString::number(a));
     error();
     a = 2;
-    logger->debug("Value of a is " + QString::number(a));
+    logger.debug("Value of a is " + QString::number(a));
 }
 
 
 void error()
 {
-    Logger *logger = Logger::instance();
+    Logger logger = Logger("OUTPUT");
 
-    logger->setModule("OUTPUT");
-    logger->error("Critical error");
+    logger.error("Critical error");
 }

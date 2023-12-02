@@ -7,10 +7,6 @@
 
 #include "logger.h"
 
-Logger * Logger::_logger = nullptr;
-Logger::LogLevel Logger::_level = Logger::LogLevel::INFO;
-QTextStream Logger::_out = QTextStream(stdout);
-
 
 const QHash<QString, enum Logger::LogLevel> Logger::_levels = {
     {"CRITICAL", Logger::LogLevel::CRITICAL},
@@ -20,24 +16,35 @@ const QHash<QString, enum Logger::LogLevel> Logger::_levels = {
     {"DETAIL", Logger::LogLevel::DETAIL},
     {"DEBUG", Logger::LogLevel::DEBUG}};
 
-Logger::Logger(): _module("")
+const QHash<enum Logger::LogLevel, QString> Logger::_string_levels = {
+    {Logger::LogLevel::CRITICAL, "CRITICAL"},
+    {Logger::LogLevel::ERROR, "ERROR"},
+    {Logger::LogLevel::WARNING, "WARNING"},
+    {Logger::LogLevel::INFO, "INFO"},
+    {Logger::LogLevel::DETAIL, "DETAIL"},
+    {Logger::LogLevel::DEBUG, "DEBUG"}};
+
+Logger::Logger(QString loggerName, QObject *parent):
+    _level(LogLevel::INFO), _module(loggerName), _out(QTextStream(stdout)),
+    QObject(parent)
 {
     qInstallMessageHandler(Logger::_message_handler);
 }
 
-Logger* Logger::instance()
+Logger::Logger(Logger &X):
+    _level(X._level), _module(X._module), _out(QTextStream(stdout))
 {
-    if (_logger == nullptr)
-        _logger = new Logger();
-
-    return _logger;
+    qInstallMessageHandler(Logger::_message_handler);
 }
 
 void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context, const QString &message)
 {
 
+    static QTextStream out = QTextStream(stdout);
 
     enum LogLevel level = LogLevel::DEBUG;
+    enum LogLevel referencelevel = LogLevel::INFO;
+
     switch (type) {
     case QtDebugMsg:
         break;
@@ -55,14 +62,22 @@ void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context,
         break;
     }
 
+
     QStringList items = message.split(" ");
-    QString strLevel = items.at(0);
+    QString levels = items.at(0);
+
+    QString strLevel = levels.split("%")[0];
+    QString strReference = levels.split("%")[1];
+
     if (Logger::_levels.contains(strLevel)) {
         level = Logger::_levels[strLevel];
         items.pop_front();
     }
+    if (Logger::_levels.contains(strReference)) {
+        referencelevel = Logger::_levels[strReference];
+    }
 
-    if(level > Logger::_level)
+    if(level > referencelevel)
         return ;
 
     const QString module = items.at(0);
@@ -86,41 +101,47 @@ void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context,
                                   "[" + "function " + function + "]" + " - " +
                                   "[" + "line " + line + "]" + " - " +
                                   "[" + data + "]";
-    _out << customMessage << Qt::endl;
+    out << customMessage << Qt::endl;
 }
 
 void Logger::debug(const QString &message, QString module, const char * const function, const int line)
 {
-    module = module.isEmpty() ? _module : module;
-    qDebug().noquote() << "DEBUG" << module << function << QString::number(line) << message;
+    QString level = QString("DEBUG") + QString("%") + Logger::_string_levels[_level];
+    _print(message, level, module, function, line);
 }
 
 void Logger::detail(const QString &message, QString module, const char * const function, const int line)
 {
-    module = module.isEmpty() ? _module : module;
-    qDebug().noquote() << "DETAIL" << module << function << QString::number(line) << message;
+    QString level = QString("DETAIL") + QString("%") + Logger::_string_levels[_level];
+    _print(message, level, module, function, line);
 }
 
 void Logger::info(const QString &message, QString module, const char * const function, const int line)
 {
-    module = module.isEmpty() ? _module : module;
-    qDebug().noquote() << "INFO" << module << function << QString::number(line) << message;
+    QString level = QString("INFO") + QString("%") + Logger::_string_levels[_level];
+    _print(message, level, module, function, line);
 }
 
 void Logger::warning(const QString &message, QString module, const char * const function, const int line)
 {
-    module = module.isEmpty() ? _module : module;
-    qDebug().noquote() << "WARNING" << module << function << QString::number(line) << message;
+    QString level = QString("WARNING") + QString("%") + Logger::_string_levels[_level];
+    _print(message, level, module, function, line);
 }
 
 void Logger::error(const QString &message, QString module, const char * const function, const int line)
 {
-    module = module.isEmpty() ? _module : module;
-    qDebug().noquote() << "ERROR" << module << function << QString::number(line) << message;
+    QString level = QString("ERROR") + QString("%") + Logger::_string_levels[_level];
+    _print(message, level, module, function, line);
 }
 
 void Logger::critical(const QString &message, QString module, const char * const function, const int line)
 {
+    QString level = QString("CRITICAL") + QString(QString("%")) + Logger::_string_levels[_level];
+    _print(message, level, module, function, line);
+}
+
+void Logger::_print(const QString &message, const QString& level, QString& module, const char * const function, const int line)
+{
     module = module.isEmpty() ? _module : module;
-    qDebug().noquote() << "CRITICAL" << module << function << QString::number(line) << message;
+    qDebug().noquote() << level << module << function << QString::number(line) << message;
 }
