@@ -20,6 +20,10 @@
                                                       LoggerPtr->backTrace(); \
                                                       LoggerPtr->removeStack();
 
+#define PRINT_BT(LoggerPtr) LoggerPtr->addStack(); \
+                            LoggerPtr->backTrace(); \
+                            LoggerPtr->removeStack();
+
 class Logger: public QObject
 {
     Q_OBJECT

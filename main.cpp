@@ -79,9 +79,7 @@ void m4()
 
     m5();
 
-    logger->addStack();
-    logger->backTrace();
-    logger->removeStack();
+    PRINT_BT(logger);
 }
 
 void m5()
