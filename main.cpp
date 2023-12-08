@@ -7,6 +7,7 @@ void m1();
 void m2();
 void m3(int a);
 void m4();
+void m5();
 void fn();
 void error();
 
@@ -76,9 +77,16 @@ void m4()
 
     logger->debug("Program @ m4");
 
+    m5();
+
     logger->addStack();
     logger->backTrace();
     logger->removeStack();
+}
+
+void m5()
+{
+
 }
 
 void fn()
