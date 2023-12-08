@@ -15,68 +15,74 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     LoggerManager *loggerManager = LoggerManager::instance();
-    loggerManager->outputDevice("stdout");
+    loggerManager->outputDevice(argv[1]);
 
-    Logger logger = loggerManager->logger("MAIN");
-    logger.setLevel(Logger::LogLevel::DEBUG);
-    logger.addToStack();
+    Logger *logger = loggerManager->logger("MAIN");
+    logger->setLevel(Logger::LogLevel::DEBUG);
 
-    logger.debug("Program starts", "MAIN");
+    logger->debug("Program starts", "MAIN");
 
+    logger->addStack();
     m1();
-    logger.printStack();
+
+    logger->debug("Program runs", "MAIN");
     fn();
-    logger.info("Program exits");
+    logger->backTrace();
+    logger->removeStack();
+
+    logger->info("Program exits");
     return a.exec();
 }
 
 void m1()
 {
     LoggerManager *loggerManager = LoggerManager::instance();
-    Logger logger = loggerManager->logger("MAIN");
+    Logger *logger = loggerManager->logger("MAIN");
 
-    logger.addToStack();
-    logger.debug("Program @ m1");
+    logger->debug("Program @ m1");
 
+    logger->addStack();
     m2();
-    logger.removeFromStack();
+    logger->removeStack();
 }
 
 void m2()
 {
     LoggerManager *loggerManager = LoggerManager::instance();
-    Logger logger = loggerManager->logger("MAIN");
+    Logger *logger = loggerManager->logger("MAIN");
 
-    logger.addToStack();
-    logger.debug("Program @ m2");
-
+    logger->debug("Program @ m2");
+    logger->print("*************************************");
+    logger->print("This is a plain string inside a frame");
+    logger->print("*************************************");
+    logger->addStack();
     m3();
-    logger.removeFromStack();
+    logger->removeStack();
 }
 
 void m3()
 {
     LoggerManager *loggerManager = LoggerManager::instance();
-    Logger logger = loggerManager->logger("MAIN");
+    Logger *logger = loggerManager->logger("MAIN");
 
-    logger.addToStack();
-    logger.debug("Program @ m3");
+    logger->debug("Program @ m3");
 
+    logger->addStack();
     m4();
-    logger.removeFromStack();
+    logger->removeStack();
 
 }
 
 void m4()
 {
     LoggerManager *loggerManager = LoggerManager::instance();
-    Logger logger = loggerManager->logger("MAIN");
+    Logger *logger = loggerManager->logger("MAIN");
 
-    logger.addToStack();
-    logger.debug("Program @ m4");
+    logger->addStack();
+    logger->debug("Program @ m4");
 
-    logger.printStack();
-    logger.removeFromStack();
+    logger->backTrace();
+    logger->removeStack();
 }
 
 void fn()
@@ -84,14 +90,14 @@ void fn()
     LoggerManager *loggerManager = LoggerManager::instance();
 
     // By default the level is INFO
-    Logger logger = loggerManager->logger("ALGORITHM");
+    Logger *logger = loggerManager->logger("ALGORITHM");
 
-    logger.debug("fn is working");
+    logger->debug("fn is working");
     int a = 1;
-    logger.debug("Value of a is " + QString::number(a));
+    logger->debug("Value of a is " + QString::number(a));
     error();
     a = 2;
-    logger.warning("Value of a is " + QString::number(a));
+    logger->warning("Value of a is " + QString::number(a));
 }
 
 
@@ -99,7 +105,7 @@ void error()
 {
     LoggerManager *loggerManager = LoggerManager::instance();
     // By default the level is INFO
-    Logger logger = loggerManager->logger("OUTPUT");
+    Logger *logger = loggerManager->logger("OUTPUT");
 
-    logger.error("Critical error");
+    logger->error("Critical error");
 }

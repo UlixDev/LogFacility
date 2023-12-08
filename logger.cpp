@@ -2,9 +2,6 @@
 
 #include <QByteArray>
 
-#include <QDateTime>
-#include <QDateTime>
-
 #include <QFile>
 #include <QIODevice>
 
@@ -18,7 +15,8 @@ const QHash<QString, enum Logger::LogLevel> Logger::_levels = {
     {"INFO", Logger::LogLevel::INFO},
     {"DETAIL", Logger::LogLevel::DETAIL},
     {"DEBUG", Logger::LogLevel::DEBUG},
-    {"STACK", Logger::LogLevel::STACK}
+    {"STACK", Logger::LogLevel::STACK},
+    {"PLAIN", Logger::LogLevel::PLAIN}
     };
 
 const QHash<enum Logger::LogLevel, QString> Logger::_string_levels = {
@@ -28,7 +26,8 @@ const QHash<enum Logger::LogLevel, QString> Logger::_string_levels = {
     {Logger::LogLevel::INFO, "INFO"},
     {Logger::LogLevel::DETAIL, "DETAIL"},
     {Logger::LogLevel::DEBUG, "DEBUG"},
-    {Logger::LogLevel::STACK, "STACK"}
+    {Logger::LogLevel::STACK, "STACK"},
+    {Logger::LogLevel::PLAIN, "PLAIN"}
 };
 
 
@@ -139,7 +138,9 @@ void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context,
     data.removeLast();
 
     QString today = QDateTime::currentDateTime().toString();
-    const QString customMessage = "[" + today + "]" + " - " +
+    const QString customMessage = ((level == LogLevel::STACK) || (level == LogLevel::PLAIN)) ?
+        data :
+        "[" + today + "]" + " - " +
                                   "[" + strLevel + "]" + " - " +
                                   "[" + module + "]" + " - " +
                                   "[" + "file" + " " + file + "]" + " - " +
@@ -152,11 +153,25 @@ void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context,
         of.close();
 }
 
-void Logger::stack(const QString &message)
+void Logger::bt(const QString &message)
 {
+    QString currentDeviceName = _device_name;
+    _device_name = (_device_name == "stdout") ?
+                       "log.bt" : (_device_name == "stderr") ?
+                                                    "err.bt" : _device_name + QString(".") + QString("bt");
+
     QString level = QString("STACK") + QString("%") + QString("STACK");
     _print(message, level, "", "", "", 0);
+
+    _device_name = currentDeviceName;
 }
+
+void Logger::print(const QString &message)
+{
+    QString level = QString("PLAIN") + QString("%") + QString("PLAIN");
+    _print(message, level, "", "", "", 0);
+}
+
 void Logger::debug(const QString &message, QString module, const char * const file, const char * const function, const int line)
 {
     QString level = QString("DEBUG") + QString("%") + Logger::_string_levels[_level];
