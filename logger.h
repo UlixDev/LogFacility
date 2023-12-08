@@ -11,14 +11,14 @@
 
 #include <QTextStream>
 
-#define TRACK_STATEMENT(Statement, LoggerPtr) LoggerPtr->addStack(); \
-                                              Statement; \
-                                              LoggerPtr->removeStack();
+#define TRACK_CALL(Statement, LoggerPtr) LoggerPtr->addStack(); \
+                                         Statement; \
+                                         LoggerPtr->removeStack();
 
-#define TRACK_STATEMENT_AND_PRINT_BT(Statement, LoggerPtr) LoggerPtr->addStack(); \
-                                                           Statement; \
-                                                           LoggerPtr->backTrace(); \
-                                                           LoggerPtr->removeStack();
+#define TRACK_CALL_AND_PRINT_BT(Statement, LoggerPtr) LoggerPtr->addStack(); \
+                                                      Statement; \
+                                                      LoggerPtr->backTrace(); \
+                                                      LoggerPtr->removeStack();
 
 class Logger: public QObject
 {

@@ -22,11 +22,11 @@ int main(int argc, char *argv[])
 
     logger->debug("Program starts", "MAIN");
 
-    TRACK_STATEMENT(m1(), logger);
+    TRACK_CALL(m1(), logger);
 
     logger->debug("Program runs", "MAIN");
 
-    TRACK_STATEMENT_AND_PRINT_BT(fn(), logger);
+    TRACK_CALL_AND_PRINT_BT(fn(), logger);
 
     logger->info("Program exits");
     return a.exec();
@@ -39,7 +39,7 @@ void m1()
 
     logger->debug("Program @ m1");
 
-    TRACK_STATEMENT(m2(), logger);
+    TRACK_CALL(m2(), logger);
 }
 
 void m2()
@@ -52,7 +52,7 @@ void m2()
     logger->print("This is a plain string inside a frame");
     logger->print("*************************************");
 
-    TRACK_STATEMENT(m3(10), logger);
+    TRACK_CALL(m3(10), logger);
 }
 
 void m3(int a)
@@ -63,7 +63,7 @@ void m3(int a)
     logger->debug("Program @ m3");
     logger->debug("The passed argument a reads " + QString::number(a));
 
-    TRACK_STATEMENT(m4(), logger);
+    TRACK_CALL(m4(), logger);
 
 }
 
