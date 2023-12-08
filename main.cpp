@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
 
     logger->debug("Program starts", "MAIN");
 
+    qInfo() << "INFO from MAIN";
     TRACK_CALL(m1(), logger);
 
     logger->debug("Program runs", "MAIN");
@@ -38,6 +39,7 @@ void m1()
     Logger *logger = loggerManager->logger("MAIN");
 
     logger->debug("Program @ m1");
+    qWarning() << "WARNING from MAIN";
 
     TRACK_CALL(m2(), logger);
 }
@@ -84,6 +86,7 @@ void fn()
     // By default the level is INFO
     Logger *logger = LoggerManager::getLogger("ALGORITHM");
 
+    qCritical() << "CRITICAL from ALGORITHM";
     logger->debug("fn is working");
     int a = 1;
     logger->debug("Value of a is " + QString::number(a));

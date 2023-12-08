@@ -5,6 +5,8 @@
 #include <QFile>
 #include <QIODevice>
 
+#include <QRegularExpression>
+
 #include "logger.h"
 
 
@@ -65,6 +67,10 @@ Logger& Logger::operator=(const Logger r)
 
 void Logger::_message_handler(QtMsgType type, const QMessageLogContext &context, const QString &message)
 {
+
+    const QRegularExpression re("void Logger::_print\\(.*\\)");
+    if (!re.globalMatch(QByteArray(context.function)).hasNext())
+        return;
 
     QStringList items = message.split(" ");
     QString outputFilename = items.at(0);
