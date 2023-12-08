@@ -18,6 +18,11 @@ LoggerManager* LoggerManager::instance()
     return _logger_manager;
 }
 
+Logger* LoggerManager::getLogger(QString loggerName)
+{
+    return LoggerManager::instance()->logger(loggerName);
+}
+
 Logger* LoggerManager::logger(QString loggerName)
 {
     if(!_loggers.contains(loggerName)) {

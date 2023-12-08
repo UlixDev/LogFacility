@@ -15,6 +15,7 @@ class LoggerManager : public QObject
 public:
 
     static LoggerManager * instance();
+    static Logger * getLogger(QString loggerName);
     Logger * logger(QString loggerName);
     inline void outputDevice(const QString &deviceName) {_device_name = deviceName;}
 

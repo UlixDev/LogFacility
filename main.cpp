@@ -5,7 +5,7 @@
 
 void m1();
 void m2();
-void m3();
+void m3(int a);
 void m4();
 void fn();
 void error();
@@ -22,13 +22,11 @@ int main(int argc, char *argv[])
 
     logger->debug("Program starts", "MAIN");
 
-    logger->addStack();
-    m1();
+    TRACK_STATEMENT(m1(), logger);
 
     logger->debug("Program runs", "MAIN");
-    fn();
-    logger->backTrace();
-    logger->removeStack();
+
+    TRACK_STATEMENT_AND_PRINT_BT(fn(), logger);
 
     logger->info("Program exits");
     return a.exec();
@@ -41,9 +39,7 @@ void m1()
 
     logger->debug("Program @ m1");
 
-    logger->addStack();
-    m2();
-    logger->removeStack();
+    TRACK_STATEMENT(m2(), logger);
 }
 
 void m2()
@@ -55,21 +51,19 @@ void m2()
     logger->print("*************************************");
     logger->print("This is a plain string inside a frame");
     logger->print("*************************************");
-    logger->addStack();
-    m3();
-    logger->removeStack();
+
+    TRACK_STATEMENT(m3(10), logger);
 }
 
-void m3()
+void m3(int a)
 {
     LoggerManager *loggerManager = LoggerManager::instance();
     Logger *logger = loggerManager->logger("MAIN");
 
     logger->debug("Program @ m3");
+    logger->debug("The passed argument a reads " + QString::number(a));
 
-    logger->addStack();
-    m4();
-    logger->removeStack();
+    TRACK_STATEMENT(m4(), logger);
 
 }
 
@@ -78,19 +72,17 @@ void m4()
     LoggerManager *loggerManager = LoggerManager::instance();
     Logger *logger = loggerManager->logger("MAIN");
 
-    logger->addStack();
     logger->debug("Program @ m4");
 
+    logger->addStack();
     logger->backTrace();
     logger->removeStack();
 }
 
 void fn()
 {
-    LoggerManager *loggerManager = LoggerManager::instance();
-
     // By default the level is INFO
-    Logger *logger = loggerManager->logger("ALGORITHM");
+    Logger *logger = LoggerManager::getLogger("ALGORITHM");
 
     logger->debug("fn is working");
     int a = 1;
